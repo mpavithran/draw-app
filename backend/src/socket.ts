@@ -9,11 +9,15 @@ const connectSocket = async (server, app) => {
   });
 
   app.set("socket", io);
+  const files = await fs.promises.readdir("./src");
+  const folders = files.filter((file) =>
+    fs.statSync(`./src/${file}`).isDirectory()
+  );
 
-  const versions = ["./v1"];
+  const versions = folders;
 
   versions.map((each) => {
-    const initiateSocketVersion = require(each + "/socket");
+    const initiateSocketVersion = require("./" + each + "/socket");
 
     const v = "/" + each;
     io.of(v).on("connection", (socket) => {

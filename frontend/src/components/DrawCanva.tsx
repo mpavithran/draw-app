@@ -4,8 +4,10 @@ const DrawCanva: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const [drawing, setDrawing] = useState<boolean>(false);
-  const [color, setColor] = useState("#000000");
-  const [brushSize, setBrushSize] = useState(5);
+  const [color, setColor] = useState<string>("#000000");
+  const [brushSize, setBrushSize] = useState<number>(5);
+  const [history, setHistory] = useState<string[]>([]);
+  const [redoStack, setRedoStack] = useState<string[]>([]);
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!ctxRef.current) return;
@@ -15,6 +17,7 @@ const DrawCanva: React.FC = () => {
     ctxRef.current.strokeStyle = color;
     ctxRef.current.lineWidth = brushSize;
     setDrawing(true);
+    saveState();
   };
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -40,6 +43,62 @@ const DrawCanva: React.FC = () => {
         canvasRef.current.height
       );
     }
+  };
+
+  const saveState = () => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      setHistory((prev) => [...prev, canvas.toDataURL()]);
+    }
+    setRedoStack([]);
+  };
+
+  const undo = () => {
+    if (history.length === 0) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    setRedoStack((prev) => [canvas.toDataURL(), ...prev]);
+
+    const lastState = history[history.length - 1];
+    setHistory((prev) => prev.slice(0, -1));
+
+    const img = new Image();
+    img.src = lastState;
+    img.onload = () => {
+      if (ctxRef.current && canvasRef.current) {
+        ctxRef.current.clearRect(
+          0,
+          0,
+          canvasRef.current.width,
+          canvasRef.current.height
+        );
+        ctxRef.current.drawImage(img, 0, 0);
+      }
+    };
+  };
+
+  const redo = () => {
+    if (redoStack.length === 0) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    setHistory((prev) => [...prev, canvas.toDataURL()]);
+
+    const nextState = redoStack[0];
+    setRedoStack((prev) => prev.slice(1));
+
+    const img = new Image();
+    img.src = nextState;
+    img.onload = () => {
+      if (ctxRef.current && canvasRef.current) {
+        ctxRef.current.clearRect(
+          0,
+          0,
+          canvasRef.current.width,
+          canvasRef.current.height
+        );
+        ctxRef.current.drawImage(img, 0, 0);
+      }
+    };
   };
 
   useEffect(() => {
@@ -72,12 +131,26 @@ const DrawCanva: React.FC = () => {
           value={brushSize}
           onChange={(e) => setBrushSize(Number(e.target.value))}
         />
-        <button
-          className="w-fit mt-5 mx-auto px-2 py-1 font-bold text-lg text-center border border-blue-600 rounded-lg cursor-pointer"
-          onClick={clearCanvas}
-        >
-          Clear
-        </button>
+        <div className="grid grid-cols-3 gap-x-2">
+          <button
+            onClick={undo}
+            className="w-fit mt-5 mx-auto px-2 py-1 font-bold text-lg text-center border border-blue-600 rounded-lg cursor-pointer"
+          >
+            Undo
+          </button>
+          <button
+            onClick={redo}
+            className="w-fit mt-5 mx-auto px-2 py-1 font-bold text-lg text-center border border-blue-600 rounded-lg cursor-pointer"
+          >
+            Redo
+          </button>
+          <button
+            className="w-fit mt-5 mx-auto px-2 py-1 font-bold text-lg text-center border border-blue-600 rounded-lg cursor-pointer"
+            onClick={clearCanvas}
+          >
+            Clear
+          </button>
+        </div>
       </div>
       <canvas
         ref={canvasRef}

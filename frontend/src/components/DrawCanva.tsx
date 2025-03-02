@@ -56,15 +56,15 @@ const DrawCanva: React.FC = () => {
   }, []);
 
   return (
-    <div className="w-full flex justify-center items-center mx-auto">
-      <div style={{ marginTop: "10px" }}>
-        <label>Color:</label>
+    <div className="w-full flex justify-center items-center mx-auto relative">
+      <div className="flex flex-col mt-[10px] absolute top-6 left-14 bg-white border border-black w-[20%] h-[80%] px-4 rounded-lg">
+        <label className="font-bold text-lg mt-5">Color:</label>
         <input
           type="color"
           value={color}
           onChange={(e) => setColor(e.target.value)}
         />
-        <label style={{ marginLeft: "10px" }}>Brush Size:</label>
+        <label className="font-bold text-lg mt-5">Brush Size:</label>
         <input
           type="range"
           min="1"
@@ -72,7 +72,10 @@ const DrawCanva: React.FC = () => {
           value={brushSize}
           onChange={(e) => setBrushSize(Number(e.target.value))}
         />
-        <button onClick={clearCanvas} style={{ marginLeft: "10px" }}>
+        <button
+          className="w-fit mt-5 mx-auto px-2 py-1 font-bold text-lg text-center border border-blue-600 rounded-lg cursor-pointer"
+          onClick={clearCanvas}
+        >
           Clear
         </button>
       </div>

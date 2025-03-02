@@ -16,8 +16,8 @@ const connectSocket = async (server, app) => {
 
   const versions = folders;
 
-  versions.map((each) => {
-    const initiateSocketVersion = require("./" + each + "/socket");
+  versions.map(async (each) => {
+    const { default: initiateSocketVersion } = await import(`./${each}/socket`);
 
     const v = "/" + each;
     io.of(v).on("connection", (socket) => {
